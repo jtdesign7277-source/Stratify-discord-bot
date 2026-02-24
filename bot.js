@@ -151,3 +151,66 @@ client.login(TOKEN).catch((err) => {
   console.error('❌ Login failed:', err.message);
   process.exit(1);
 });
+
+/* ─── AI Content Factory: Script Drafts Pipeline ─── */
+const SCRIPT_DRAFTS_CHANNEL = 'script-drafts';
+const XAI_API_KEY = process.env.XAI_API_KEY;
+
+client.on(Events.MessageCreate, async (message) => {
+  if (message.author.bot) return;
+  if (message.channel.name !== SCRIPT_DRAFTS_CHANNEL) return;
+  if (!message.content.startsWith('!script')) return;
+
+  const script = message.content.replace('!script', '').trim();
+  if (!script) return;
+
+  await message.react('⏳');
+
+  try {
+    const res = await fetch('https://api.x.ai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${XAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: 'grok-2-latest',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are SLAP, Stratify\'s Growth & Marketing Strategist. Take the script draft and rewrite it optimized for TikTok. Rules: Hook must be under 5 words and create instant curiosity. Total length under 60 seconds when spoken. Use short punchy sentences. End with one clear CTA pointing to the waitlist. Keep all real numbers. Return only the final script, no commentary.'
+          },
+          {
+            role: 'user',
+            content: script
+          }
+        ]
+      })
+    });
+
+    const data = await res.json();
+    const optimized = data.choices?.[0]?.message?.content || 'Error getting response';
+
+    await message.reactions.removeAll();
+    await message.react('✅');
+
+    await message.channel.send(
+      `🎬 **TIKTOK-READY** (via SLAP + Grok)\n` +
+      `─────────────────────\n` +
+      `${optimized}\n` +
+      `─────────────────────\n` +
+      `✅ Ready for Runway → Post`
+    );
+
+    // Log to #agent-logs
+    const logsChannel = message.guild.channels.cache.find(c => c.name === 'agent-logs');
+    if (logsChannel) {
+      await logsChannel.send(`[SLAP] Script optimized at ${new Date().toLocaleTimeString()} — ready for Runway`);
+    }
+
+  } catch (err) {
+    console.error('Grok pipeline error:', err);
+    await message.react('❌');
+    await message.channel.send('Pipeline error — check bot logs.');
+  }
+});
