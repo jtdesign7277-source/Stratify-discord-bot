@@ -159,9 +159,9 @@ const XAI_API_KEY = process.env.XAI_API_KEY;
 client.on(Events.MessageCreate, async (message) => {
   if (message.author.bot) return;
   if (message.channel.name !== SCRIPT_DRAFTS_CHANNEL) return;
-  if (!message.content.startsWith('!script')) return;
+  
 
-  const script = message.content.replace('!script', '').trim();
+  const script = message.content.trim();
   if (!script) return;
 
   await message.react('⏳');
