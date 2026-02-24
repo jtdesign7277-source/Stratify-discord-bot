@@ -159,6 +159,7 @@ const XAI_API_KEY = process.env.XAI_API_KEY;
 
 client.on(Events.MessageCreate, async (message) => {
   if (message.author.bot) return;
+  console.log('MSG IN:', message.channel.name, '|', message.content.slice(0,50));
   if (message.channel.name !== SCRIPT_DRAFTS_CHANNEL) return;
   
 
