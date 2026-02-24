@@ -83,6 +83,7 @@ client.on(Events.GuildMemberAdd, async (member) => {
 client.on(Events.MessageCreate, async (message) => {
   if (message.author.bot) return;
   if (message.guild?.id !== GUILD_ID) return;
+  if (message.channel.name === 'script-drafts') return;
 
   const content = message.content.toLowerCase().trim();
 
